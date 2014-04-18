@@ -71,3 +71,36 @@ if [ $? -ne 0 ]; then
     fi
 fi
 
+
+echo "$HOME : $SUDO_USER"
+
+ANSIBLE_DIR="$HOME/workspace/src/ansible"
+sudo -u $SUDO_USER mkdir -p $ANSIBLE_DIR
+
+echo "Installing Ansible"
+# set the ‘ansible_python_interpreter’ variable in inventory
+
+
+echo "Cloning Ansible repository"
+sudo -u $SUDO_USER git clone git://github.com/ansible/ansible.git $ANSIBLE_DIR 2> /dev/null
+
+if [ $? -ne 0 ]; then
+    echo "Git can't clone the repository, probably it already exist, trying to update it"
+fi
+
+# Go to ansible directory
+cd $ANSIBLE_DIR
+
+sudo -u $SUDO_USER git pull
+
+# todo: fix this to notnee to run it manually
+echo "Please source your current shell, running the following command:"
+echo -e "\n\$ source $ANSIBLE_DIR/hacking/env-setup\n"
+
+
+source $ANSIBLE_DIR/hacking/env-setup
+
+# Create Ansible folder, to host inventories
+
+ansible all -a "/bin/echo hello"
+
