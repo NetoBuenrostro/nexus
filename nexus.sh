@@ -57,3 +57,17 @@ else
     echo "Python $PYTHON_VER found."
 fi
 
+# check for git
+echo "Checking git 1.7.9+ ..."
+GIT_VERSION=`which git`
+if [ $? -ne 0 ]; then
+    echo "Instaling git"
+    apt-get --yes install git git-man liberror-perl patch gitk git-svn git-gui
+    # Redhat/fedora/CentOS yum install git-core
+    if [ $? -ne 0 ]; then
+        echo -e "\nPlease install git 1.7.9 or greater to continue\n"
+        echo -e "\n sudo apt-get --yes install git git-man liberror-perl patch gitk git-svn git-gui\n"
+        exit 1
+    fi
+fi
+
