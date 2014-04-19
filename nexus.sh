@@ -93,7 +93,7 @@ cd $ANSIBLE_DIR
 
 sudo -u $SUDO_USER git pull
 
-# todo: fix this to notnee to run it manually
+# TODO: fix this to not need to run it manually
 echo "Please source your current shell, running the following command:"
 echo -e "\n\$ source $ANSIBLE_DIR/hacking/env-setup\n"
 
