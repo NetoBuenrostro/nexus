@@ -2,10 +2,12 @@
 
 echo "Hello, we are going to start the setup of the tool chain"
 echo -e "needed to start developing.\n"
+FG_RED="\e[31m"
+RESET="\e[0m"
 
 # test if you are super user
 if [[ $EUID -ne 0 ]]; then
-   echo "Please run this script as root" 1>&2
+   echo -e $FG_RED"Please run this script as root"$RESET 1>&2
    exit 1
 fi
 
@@ -75,7 +77,7 @@ fi
 echo "$HOME : $SUDO_USER"
 
 ANSIBLE_DIR="$HOME/workspace/src/ansible"
-sudo -u $SUDO_USER mkdir -p $ANSIBLE_DIR
+sudo -u $SUDO_USER mkdir -p "$ANSIBLE_DIR"
 
 echo "Installing Ansible"
 # set the ‘ansible_python_interpreter’ variable in inventory
@@ -97,10 +99,74 @@ sudo -u $SUDO_USER git pull
 echo "Please source your current shell, running the following command:"
 echo -e "\n\$ source $ANSIBLE_DIR/hacking/env-setup\n"
 
-
 source $ANSIBLE_DIR/hacking/env-setup
 
-# Create Ansible folder, to host inventories
+ANSIBILIZED="./.ansibilized~"
 
-ansible all -a "/bin/echo hello"
+if [ ! -e $ANSIBILIZED ]; then
+    # mark this as ansibilized
+    echo "setting ansible"
+    echo -e "\nsource $ANSIBLE_DIR/hacking/env-setup > /dev/null\n" >> ~/.bashrc
+    sudo -u $SUDO_USER touch $ANSIBILIZED
+fi
 
+# go to nexus home ~/workspace/nexus
+NEXUS_HOME="$HOME/workspace/nexus"
+cd $NEXUS_HOME
+if [ $? -ne 0 ]; then
+    # if the path doesn't exists then we create it
+    mkdir $NEXUS_HOME
+    cd $NEXUS_HOME
+fi
+
+# Refresh the
+# this is safe to run, even if we do have one created already
+git init
+
+#if it already exists we are ignoring it, and continue to pull
+git remote add origin https://github.com/NetoBuenrostro/nexus.git
+
+git branch --set-upstream-to=origin/master master
+
+git pull
+
+# Check for wget
+
+wget --version
+if [ $? -ne 0 ]; then
+    echo "Installing wget"
+    sudo apt-get --yes install wget
+fi
+
+
+# Install virtual box 4.3.10
+VIRTUALBOX="http://download.virtualbox.org/virtualbox/4.3.10/virtualbox-4.3_4.3.10-93012~Ubuntu~raring_amd64.deb"
+
+# TODO: this may break with a version like 4.12, but I haven't seen any like that yet
+echo "Checking virtualbox"
+VBOX_VERSION=$(vboxmanage --version 2>/dev/null | cut -b 1-3)
+if [ $? -ne 0 ]; then
+    echo "Installing virtualbox"
+    sudo -u $SUDO_USER wget -c $VIRTUALBOX -O /tmp/virtualbox.deb
+    dpkg -i /tmp/virtualbox.deb
+else
+    case "$VBOX_VERSION" in
+        "4.0" | "4.1" | "4.2" | "4.3" )
+            # you are good to go
+            ;;
+        *)
+            echo -e "$FG_RED You need to install any of those versions for Virtual box:"
+            echo -e "4.0.x | 4.1.x | 4.2.x | 4.3.x"$RESET
+            ;;
+    esac
+fi
+
+
+VAGRANTUP="https://dl.bintray.com/mitchellh/vagrant/vagrant_1.5.3_x86_64.deb"
+echo "checking for vagrant"
+vagrant --version >/dev/null
+if [ $? -ne 0 ]; then
+    echo "installing vagrantup"
+    sudo -u $SUDO_USER wget -c $VAGRANTUP -O /tmp/vagrantup.deb
+    dpkg -i /tmp/vagrantup.deb
+fi
